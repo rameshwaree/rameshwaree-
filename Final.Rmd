@@ -1,0 +1,595 @@
+---
+title: "Final Assignment"
+output: html_document
+date: "2024-04-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#final Project 
+#Rameshwaree Sharma 
+#AIRBNB DATASET
+
+```{r}
+colours <- c("blue", "red", "green", "yellow", "orange")
+```
+
+```{r}
+install.packages("splitstackshape")
+```
+
+```{r}
+library(splitstackshape)
+```
+
+
+```{r}
+airbnb <- read.csv("/Users/rameshwaree/Desktop/AirB_NYC_2019\ .csv")
+```
+
+```{r}
+head(airbnb)
+```
+
+
+```{r}
+str(airbnb)
+```
+
+```{r}
+any(is.na(airbnb))
+```
+
+```{r}
+sum(is.na(airbnb))
+```
+#There were 10052 Null values which we removed 
+```{r}
+airbnb<- na.omit(airbnb)
+data <- unique(airbnb)
+remaining_observations <- nrow(airbnb)
+print(remaining_observations)
+```
+
+
+```{r}
+unique(airbnb$price)
+```
+
+```{r}
+unique(airbnb$availability_365)
+```
+
+```{r}
+unique(airbnb$neighbourhood_group)
+```
+
+```{r}
+paste("Price Minimum:", min(airbnb$price), "| Price Maximum:", max(airbnb$price))
+```
+
+```{r}
+mean_price <- tapply(airbnb$price, airbnb$availability_365, FUN = mean)
+median_price <- tapply(airbnb$price, airbnb$availability_365, FUN = median)
+sd_price <- tapply(airbnb$price, airbnb$availability_365, FUN = sd)
+
+# Combining results into a data frame
+summary_stats <- data.frame(price = unique(airbnb$availability_365),
+                            mean_price = mean_price,
+                            median_price = median_price,
+                            sd_price = sd_price)
+print(summary_stats)
+```
+
+```{r}
+airbnb$log_price <- log(airbnb$price)
+```
+
+```{r}
+summary(airbnb)
+```
+#EDA
+```{r}
+# Splitting the data by 'neighbourhood_group'
+neighbourhoods <- unique(airbnb$neighbourhood_group)
+
+# Create separate histograms for each neighbourhood group
+par(mfrow = c(2, 3))  # Setting up a 2x3 layout for multiple plots
+for (neighbourhood in neighbourhoods) {
+  hist(airbnb$log_price[airbnb$neighbourhood_group == neighbourhood],
+       main = paste("Histogram of Listing Prices in", neighbourhood),
+       xlab = "Listing Price")
+}
+
+```
+
+```{r}
+boxplot(log_price ~ neighbourhood_group, data = airbnb,
+        main = "Boxplot of Listing Prices by Neighbourhood Group",
+        xlab = "Neighbourhood Group", ylab = "Listing Price")
+```
+```{r}
+boxplot(airbnb$minimum_nights, main = "Boxplot of minimum_nights")
+```
+```{r}
+# Q1 <- quantile(airbnb$minimum_nights, 0.25)
+#Q3 <- quantile(airbnb$minimum_nights, 0.75)
+#IQR <- Q3 - Q1
+# lower_bound <- Q1 - 1.5 * IQR
+#upper_bound <- Q3 + 1.5 * IQR
+# cleaned_data <- airbnb[airbnb$minimum_nights >= lower_bound & airbnb$minimum_nights <= upper_bound, ]
+```
+
+
+```{r}
+airbnb <- airbnb[airbnb$log_price > 0, ]
+summary(airbnb$log_price)
+hist(airbnb$log_price, main = "Distribution of Prices", xlab = "Price")
+```
+Positive skewed 
+
+
+
+
+```{r}
+hist(subset(airbnb$log_price, airbnb$log_price <= 1000),
+     col = "Pink",       
+     breaks = 70,        
+     border = "black",   
+     main = "Price <= 1000 | Histogram",  
+     xlab = "Price",     
+     ylab = "Frequency", 
+     ylim = c(0, 1000))  
+
+```
+
+```{r}
+plot(airbnb$log_price ~ airbnb$number_of_reviews  , main = "Price vs.number_of_reviews  ", xlab = "number_of_reviews ", ylab = "Price")
+
+```
+
+```{r}
+plot(airbnb$log_price ~ airbnb$availability_365  , main = "Price vs. availability_365  ", xlab = "availability_365 ", ylab = "Price")
+
+```
+
+```{r}
+plot(airbnb$price <= 1000 ~ airbnb$availability_365  , main = "Price vs. availability_365  ", xlab = "availability_365 ", ylab = "Price")
+
+```
+
+```{r}
+Neighbourhood <- xtabs(~ neighbourhood_group, data = airbnb)
+orderIDX <- order(Neighbourhood, decreasing = TRUE)
+yLimit <- range(pretty(range(Neighbourhood)))
+XX <- barplot(Neighbourhood[orderIDX], ylim = yLimit, axes = FALSE, names.arg = FALSE, col = colours[1], border = colours[1])
+axis(2, at = pretty(yLimit), tck = -.015, lwd =2, labels = FALSE)
+mtext(pretty(yLimit),2,at =pretty(yLimit), line = .4, las = 1)
+mtext("Frequency", 2, font = 2, line = 3)
+mtext(rownames(Neighbourhood)[orderIDX], 1, at = XX, line = .1, padj = c(1,0), cex = 1)
+
+```
+##From the above graph, we can tell that Manhattan and Brooklyn have the highest number of the listing 
+
+#Research Question 
+
+##How does the inclusion of neighborhood and property type impact the accuracy of predictive models compared to  number of reviews, and availability of amenities, 
+###NULL 
+###ALTERNATIVE
+
+```{r}
+cor(airbnb$price <= 1000, airbnb$number_of_reviews )
+```
+
+```{r}
+cor(airbnb$price <= 1000, airbnb$availability_365 )
+
+```
+
+```{r}
+price_percentiles <- quantile(airbnb$price, probs = seq(0, 1, by = 0.20), na.rm = TRUE)
+print(price_percentiles)
+```
+
+```{r}
+avail_percentiles <- quantile(airbnb$availability_365, probs = seq(0, 1, by = 0.20), na.rm = TRUE)
+print(avail_percentiles)
+```
+
+```{r}
+min(airbnb$price)
+```
+
+```{r}
+max(airbnb$price)
+```
+
+```{r}
+mean(airbnb$price)
+```
+
+```{r}
+mean(airbnb$availability_365)
+```
+
+#REGRESSION 
+
+```{r}
+out <- boxplot(airbnb$price, plot = FALSE)
+airbnb3 <- airbnb[!(airbnb$price %in% out$out), ]
+```
+
+
+```{r}
+set.seed(42)
+trainIDX <- sample(c(TRUE, FALSE), size = dim(airbnb)[1], replace = TRUE, prob = c(.80,.20))
+airbnb.Train <- airbnb[trainIDX,]
+airbnb.Test <- airbnb[!trainIDX,]
+```
+
+```{r}
+theTwoSamples <- splitstackshape::stratified(airbnb, group = "neighbourhood_group", size = .6, replace = FALSE, bothSets = TRUE)
+airbnb.Train <- as.data.frame(theTwoSamples$SAMP1)
+testValidate <- splitstackshape::stratified(theTwoSamples$SAMP2, group = "neighbourhood_group", size = .5, replace = FALSE, bothSets = TRUE)
+airbnb.Test <- as.data.frame(testValidate$SAMP1)
+airbnb.Validate <- as.data.frame(testValidate$SAMP2)
+```
+
+```{r}
+pTrain <- nrow(airbnb.Train)/nrow(airbnb)
+pTest <- nrow(airbnb.Test)/nrow(airbnb)
+pValidate <- nrow(airbnb.Validate)/nrow(airbnb)
+
+data.frame(Train = pTrain, Test = pTest, Validate = pValidate)
+```
+
+```{r}
+#encoded_data <- cbind(airbnb, model.matrix(~ neighbourhood_group + room_type - 1, data = airbnb))
+```
+
+```{r}
+theModel <- lm(log_price ~ minimum_nights + longitude +latitude + number_of_reviews + availability_365, data = airbnb.Train)
+summary(theModel)
+```
+
+
+```{r}
+theModel1 <- lm(log_price ~ neighbourhood_group + room_type + number_of_reviews + availability_365, data = airbnb.Train)
+summary(theModel1)
+```
+
+```{r}
+#plot(theModel)
+```
+
+
+```{r}
+
+theVariables <- c( "minimum_nights", "longitude","latitude", "number_of_reviews","availability_365")
+
+par(mfcol = c(2,3), mai = c(.55,.25,.1,.1), omi = c(.3,.3,.3,.3))
+yLim <- range(pretty(range(airbnb.Train$log_price)))
+
+for (i in 1:length(theVariables)){
+  xLim <- range(pretty(range(airbnb.Train[, theVariables[i]])))
+  plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+  axis(1, at = pretty(xLim),lwd = 2, tck = -.015, labels = FALSE)
+  axis(2, at = pretty(yLim),lwd = 2, tck = -.015, labels = FALSE)
+  mtext(pretty(xLim), 1, at = pretty(xLim), line = .5)
+  mtext(theVariables[i],1, font =2, line = 1.75)
+  if (i == 1 | i == 2){
+    mtext(pretty(yLim), 2, at = pretty(yLim), line = .4, las = 1)
+    mtext("price_log", 2, font = 2, line = 2)
+  }
+  points(airbnb.Train[, theVariables[i]], airbnb.Train$log_price, pch = 21, bg = colours[2] , col = colours[1])
+  abline(lm(as.formula(paste0("log_price ~ ", theVariables[i]))
+, data = airbnb.Train), lwd = 3, col = "gray75")
+}
+```
+#Normality of the residuals 
+
+```{r}
+theResiduals <- theModel$residuals
+```
+
+```{r}
+axisValues <- qqnorm(theResiduals, plot.it = FALSE)
+xLim <- range(pretty(range(axisValues$x)))
+yLim <-  range(pretty(range(axisValues$y)))
+
+qqnorm(theResiduals, xlim = xLim, ylim = yLim, pch = 21, col = colours[2], bg = colours[1], cex = 1.5, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE, pos = 0)
+axis(1, at = pretty(xLim), lwd = 2, tck = .015, labels = FALSE, pos = 0)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE, pos = 0)
+axis(2, at = pretty(yLim), lwd = 2, tck = .015, labels = FALSE, pos = 0)
+
+# Text Labelling in the plot
+text(pretty(xLim)[!pretty(xLim) == 0], -.5, pretty(xLim)[!pretty(xLim) == 0])
+text(-.5, pretty(yLim)[!pretty(yLim) == 0], pretty(yLim)[!pretty(yLim) == 0])
+text(max(pretty(xLim)), -1, "Theoretical Quantiles", font = 2, adj = 1)
+text(-5, min(pretty(yLim)), "Sample Quantiles", font = 2, adj = 0, srt = 90)
+
+qqline(theResiduals, lwd=3, col ="gray75")
+```
+#Homoscedasticity
+```{r}
+xLim <- range(pretty(range(theModel$fitted.values)))
+yLim <- range(pretty(range(theResiduals)))
+plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE, pos=0)
+axis(1, at = pretty(xLim), lwd = 2, tck = .015, labels = FALSE, pos=0)
+axis(2, at = pretty(yLim), lwd = 2, tck = .015, labels = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(yLim),2,at = pretty(yLim), line = .4, las = 1)
+mtext("Residuals", 2, font = 2, line= 1.5)
+
+text(pretty(xLim), -.5, pretty(xLim))
+text(max(pretty(xLim)), -1, "Fitted Values", font =2, adj=1)
+points(theModel$fitted.values, theResiduals, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+```
+#Multicollinearity
+#influentialvalue and outliers
+```{r}
+standardRez <- rstandard(theModel)
+yLim <- range(pretty(range(standardRez)))
+plot(x = NULL, y = NULL, xlim = c(1,length(standardRez)), ylim = yLim, axes = FALSE, ann = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(yLim), 2, line = .25, at = pretty(yLim), las = 1)
+mtext("Standardized Residuals", 2, font = 2, line = 1.5)
+
+points(1:length(standardRez), standardRez, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+abline(h = -3, lwd = 3, col = "gray75")
+abline(h = 3, lwd = 3, col = "gray75")
+```
+```{r}
+outliersIDX <- abs(standardRez) >3
+```
+
+```{r}
+cookD <- cooks.distance(theModel)
+
+yLim <- range(pretty(range(cookD)))
+plot(x = NULL, y = NULL, xlim = c(1,length(cookD)), ylim = yLim, axes = FALSE, ann = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(yLim), 2, line = .25, at = pretty(yLim), las = 1)
+mtext("Cook's Distance", 2, font = 2, line = 1.5)
+
+points(1:length(cookD), cookD, pch = 21, col = colours[1], bg = colours[1], cex = 1.5)
+```
+```{r}
+cutOff <- mean(cookD)+3*sd(cookD)
+cookIDX <- cookD > cutOff
+```
+
+```{r}
+diagnosticIDX <- as.logical(outliersIDX + cookIDX)
+airbnb.Train2 <- airbnb.Train[!diagnosticIDX,]
+```
+
+```{r}
+theModel.Clean <- lm(log_price ~  minimum_nights + longitude +latitude + number_of_reviews + availability_365, data = airbnb.Train2)
+```
+
+```{r}
+
+theVariables <- c( "minimum_nights", "longitude","latitude", "number_of_reviews","availability_365")
+
+par(mfcol = c(2,3), mai = c(.55,.25,.1,.1), omi = c(.3,.3,.3,.3))
+yLim <- range(pretty(range(airbnb.Train2$log_price)))
+
+for (i in 1:length(theVariables)){
+  xLim <- range(pretty(range(airbnb.Train2[, theVariables[i]])))
+  plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+  axis(1, at = pretty(xLim),lwd = 2, tck = -.015, labels = FALSE)
+  axis(2, at = pretty(yLim),lwd = 2, tck = -.015, labels = FALSE)
+  mtext(pretty(xLim), 1, at = pretty(xLim), line = .5)
+  mtext(theVariables[i],1, font =2, line = 1.75)
+  if (i == 1 | i == 2){
+    mtext(pretty(yLim), 2, at = pretty(yLim), line = .4, las = 1)
+    mtext("price_log", 2, font = 2, line = 2)
+  }
+  points(airbnb.Train2[, theVariables[i]], airbnb.Train2$log_price, pch = 21, bg = colours[2] , col = colours[1])
+  abline(lm(as.formula(paste0("log_price ~ ", theVariables[i]))
+, data = airbnb.Train2), lwd = 3, col = "gray75")
+}
+```
+
+```{r}
+axisValues <- qqnorm(theResiduals, plot.it = FALSE)
+xLim <- range(pretty(range(axisValues$x)))
+yLim <-  range(pretty(range(axisValues$y)))
+
+qqnorm(theResiduals, xlim = xLim, ylim = yLim, pch = 21, col = colours[2], bg = colours[1], cex = 1.5, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE, pos = 0)
+axis(1, at = pretty(xLim), lwd = 2, tck = .015, labels = FALSE, pos = 0)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE, pos = 0)
+axis(2, at = pretty(yLim), lwd = 2, tck = .015, labels = FALSE, pos = 0)
+
+# Text Labelling in the plot
+text(pretty(xLim)[!pretty(xLim) == 0], -.5, pretty(xLim)[!pretty(xLim) == 0])
+text(-.5, pretty(yLim)[!pretty(yLim) == 0], pretty(yLim)[!pretty(yLim) == 0])
+text(max(pretty(xLim)), -1, "Theoretical Quantiles", font = 2, adj = 1)
+text(-5, min(pretty(yLim)), "Sample Quantiles", font = 2, adj = 0, srt = 90)
+
+qqline(theResiduals, lwd=3, col ="gray75")
+```
+```{r}
+xLim <- range(pretty(range(theModel.Clean$fitted.values)))
+yLim <- range(pretty(range(theResiduals)))
+plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE, pos=0)
+axis(1, at = pretty(xLim), lwd = 2, tck = .015, labels = FALSE, pos=0)
+axis(2, at = pretty(yLim), lwd = 2, tck = .015, labels = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(yLim),2,at = pretty(yLim), line = .4, las = 1)
+mtext("Residuals", 2, font = 2, line= 1.5)
+
+text(pretty(xLim), -.5, pretty(xLim))
+text(max(pretty(xLim)), -1, "Fitted Values", font =2, adj=1)
+points(theModel$fitted.values, theResiduals, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+```
+
+
+```{r}
+summary(theModel.Clean)
+```
+
+```{r}
+theModelS <- summary(theModel.Clean)
+```
+
+```{r}
+set.seed(42)
+theSlopes <- matrix(NA, nrow = 1000, ncol = 6)
+for (i in 1:1000){
+  IDX <- sample(1:dim(airbnb.Train2)[1], 1000, replace = TRUE)
+  sampleDF <- airbnb.Train2[IDX,]
+  theModel.temp <- lm( log_price ~ neighbourhood_group + room_type + number_of_reviews + availability_365, data = sampleDF)
+  theSlopes[i,] <- theModel.temp$coefficients[2:7]
+}
+
+par(lwd = 2)
+CI <- apply(theSlopes, 2, quantile, c(0.025, .975))
+MM <- apply(theSlopes, 2, mean)
+yLimit <- range(pretty(range(CI)))
+plot(x = NULL,y = NULL, xlim = c(1,6), ylim = yLimit, axes = FALSE, ann = FALSE)
+axis(2, at = pretty(yLimit), lwd = 2, tck = -.015,labels = FALSE)
+mtext(pretty(yLimit),2,at =pretty(yLimit), line =.4, las =1)
+
+abline(h=0, col = colours[1], lty = 2, lwd = 2)
+arrows(1:6, CI[1,], 1:6, CI[2,], length = .02, angle = 90, code = 3, col = colours[1], lwd = 2)
+points(1:6, MM, pch = 19, col = colours[1])
+mtext(theVariables, 1, at = 1:6)
+
+```
+
+```{r}
+theModel.Final <- lm(log_price ~ minimum_nights + longitude +latitude + number_of_reviews + availability_365,data=airbnb.Train2)
+```
+
+```{r}
+calculateR2 <- function(yPred, y){
+  ssError <- sum((yPred-y)**2)
+  ssTotal <- sum((y-mean(y))**2)
+  R2 <- 1-ssError/ssTotal
+  return(R2)
+}
+```
+
+```{r}
+yPred <- predict(theModel.Final, newdata = airbnb.Test)
+calculateR2(yPred, airbnb.Test$log_price)
+```
+
+```{r}
+calculateRMSerror <- function(yPred, y){
+  ssError <- sum((yPred-y)**2)
+  rmsE <- sqrt(ssError/length(y))
+  return(rmsE)
+}
+```
+
+```{r}
+calculateRMSerror(yPred, airbnb.Test$log_price)
+```
+
+```{r}
+par(pty = "s")
+xLim <- range(pretty(range(yPred, airbnb.Test$log_price)))
+yLim <- xLim
+plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(xLim),1, at = pretty(xLim), line = .3)
+mtext(pretty(xLim),2, at = pretty(xLim), line = .4, las = 1)
+mtext("Predicted log10 Price", 2, font = 2, line = 1.5)
+mtext("Real log10 Price", 1, font = 2, line = 1.5)
+mtext("Long/Lat Model", 3, font = 2, adj = 0)
+abline(a = 0, b = 1, lwd = 3, col = "gray75")
+# polygon(c(4,4,9,4), c(4,9,9,4), col = rgb(.75,.75,.75,.75,.3), border=NA)
+
+points(airbnb.Test$log_price,yPred, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+
+r2 <- calculateR2(yPred, airbnb.Test$log_price)
+rmsE <- calculateRMSerror(yPred,airbnb.Test$log_price)
+
+legend("topleft", legend = c(bquote(RMS[error]~ "="~.(round(rmsE,3))), bquote(R^2~"="~.(round(r2,3)))), bty = "n")
+```
+#model comparision 
+
+```{r}
+ theModel1 <- lm(log_price ~ neighbourhood_group + room_type + number_of_reviews + availability_365, data = airbnb.Train2)
+summary(theModel)
+```
+```{r}
+calculateAIC <- function(yPred, y,p){
+  n <- length(y)
+  SSerror <- sum((yPred-y)**2)
+  AIC <- 2*p + n*log(SSerror/n)
+  return(AIC)
+}
+
+adjustedR2 <- function(yPred, y, p){
+  r2 <- calculateR2(yPred, y)
+  n <- length(y)
+  r2adj <- 1-(1-r2)*((n-1)/(n-p-1))
+  return(r2adj)
+}
+```
+
+```{r}
+yPred.Original <- predict(theModel.Final, newdata = airbnb.Test)
+yPred.neighbourhood <- predict(theModel1, newdata = airbnb.Test)
+
+AIC <- calculateAIC(yPred.Original, airbnb.Test$log_price, length(theModel.Final$coefficients))
+AIC[2] <- calculateAIC(yPred.neighbourhood, airbnb.Test$log_price, length(theModel1$coefficients))
+
+R2Adj <- adjustedR2(yPred.Original, airbnb.Test$log_price, length(theModel.Final$coefficients))
+R2Adj[2] <- adjustedR2(yPred.neighbourhood, airbnb.Test$log_price, length(theModel1$coefficients))
+```
+
+```{r}
+data.frame(AIC = AIC, R2Adjusted = R2Adj, row.names = c("orginal Model", "neighborhood  Model"))
+```
+```{r}
+par(pty = "s", mfcol = c(1,2))
+xLim <- range(pretty(range(yPred.Original, yPred.neighbourhood, airbnb.Test$log_price)))
+yLim <- xLim
+plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(xLim),1, at = pretty(xLim), line = .3)
+mtext(pretty(xLim),2, at = pretty(xLim), line = .4, las = 1)
+mtext("Predicted log10 Price", 2, font = 2, line = 1.5)
+mtext("Real log10 Price", 1, font = 2, line = 1.5)
+mtext("Long/Lat Model", 3, font = 2, adj = 0)
+abline(a = 0, b = 1, lwd = 3, col = "gray75")
+
+points(airbnb.Test$log_price,yPred.Original, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+
+legend("topleft", legend = c(paste0("AIC = ", round(AIC[1],2)), bquote(R^2~"="~.(round(R2Adj[1],3)))), bty = "n")
+
+
+plot(x = NULL, y = NULL, xlim = xLim, ylim = yLim, axes = FALSE, ann = FALSE)
+axis(1, at = pretty(xLim), lwd = 2, tck = -.015, labels = FALSE)
+axis(2, at = pretty(yLim), lwd = 2, tck = -.015, labels = FALSE)
+mtext(pretty(xLim),1, at = pretty(xLim), line = .3)
+mtext(pretty(xLim),2, at = pretty(xLim), line = .4, las = 1)
+mtext("Predicted log10 Price", 2, font = 2, line = 1.5)
+mtext("Real log10 Price", 1, font = 2, line = 1.5)
+mtext("neighborhood Model", 3, font = 2, adj = 0)
+abline(a = 0, b = 1, lwd = 3, col = "gray75")
+
+points(airbnb.Test$log_price,yPred.neighbourhood, pch = 21, col = colours[2], bg = colours[1], cex = 1.5)
+
+legend("topleft", legend = c(paste0("AIC = ", round(AIC[2],2)), bquote(R^2~"="~.(round(R2Adj[2],3)))), bty = "n")
+```
+```{r}
+yPred.neighbourhood <- predict(theModel1, newdata = airbnb.Validate)
+R2Adj.Final <- adjustedR2(yPred.neighbourhood, airbnb.Validate$log_price, length(theModel1$coefficients))
+R2Adj.Final
+```
+
